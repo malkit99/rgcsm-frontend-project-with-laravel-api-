@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Notifications\ResetPasswordNotification;
+use App\Traits\HasPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,7 +11,7 @@ use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, Notifiable , HasPermissions;
 
     /**
      * The attributes that are mass assignable.
@@ -30,6 +31,19 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'users_roles');
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'users_permissions');
+    }
+
+
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -43,4 +57,15 @@ class User extends Authenticatable
     {
         $this->notify(new ResetPasswordNotification($token));
     }
+
+    public function hasRole(...$role){
+        // $user->hasRole('admin', 'writer')
+        return $this->roles()->whereIn('slug' , $role)->count();
+    }
+
+
+
+
+
+
 }
